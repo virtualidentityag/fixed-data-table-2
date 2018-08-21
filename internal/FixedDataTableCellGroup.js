@@ -73,13 +73,22 @@ var FixedDataTableCellGroupImpl = (0, _createReactClass2.default)({
     onColumnReorderMove: _propTypes2.default.func,
     onColumnReorderEnd: _propTypes2.default.func,
 
+    height: _propTypes2.default.number.isRequired,
+
+    /**
+     * Height of fixedDataTableCellGroupLayout/cellGroupWrapper.
+     */
+    cellGroupWrapperHeight: _propTypes2.default.number,
+
     rowHeight: _propTypes2.default.number.isRequired,
 
     rowIndex: _propTypes2.default.number.isRequired,
 
     width: _propTypes2.default.number.isRequired,
 
-    zIndex: _propTypes2.default.number.isRequired
+    zIndex: _propTypes2.default.number.isRequired,
+
+    touchEnabled: _propTypes2.default.bool
   },
 
   componentWillMount: function componentWillMount() {
@@ -151,6 +160,7 @@ var FixedDataTableCellGroupImpl = (0, _createReactClass2.default)({
       key: key,
       maxWidth: columnProps.maxWidth,
       minWidth: columnProps.minWidth,
+      touchEnabled: this.props.touchEnabled,
       onColumnResize: onColumnResize,
       onColumnReorder: onColumnReorder,
       onColumnReorderMove: this.props.onColumnReorderMove,
@@ -205,6 +215,7 @@ var FixedDataTableCellGroup = (0, _createReactClass2.default)({
   },
   getDefaultProps: function getDefaultProps() /*object*/{
     return {
+      left: 0,
       offsetLeft: 0
     };
   },
@@ -214,7 +225,7 @@ var FixedDataTableCellGroup = (0, _createReactClass2.default)({
         props = _objectWithoutProperties(_props, ['offsetLeft']);
 
     var style = {
-      height: props.height,
+      height: props.cellGroupWrapperHeight || props.height,
       width: props.width
     };
 

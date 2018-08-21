@@ -24,6 +24,10 @@ var _ReactComponentWithPureRenderMixin = require('./ReactComponentWithPureRender
 
 var _ReactComponentWithPureRenderMixin2 = _interopRequireDefault(_ReactComponentWithPureRenderMixin);
 
+var _FixedDataTableEventHelper = require('./FixedDataTableEventHelper');
+
+var _FixedDataTableEventHelper2 = _interopRequireDefault(_FixedDataTableEventHelper);
+
 var _clamp = require('./clamp');
 
 var _clamp2 = _interopRequireDefault(_clamp);
@@ -33,21 +37,6 @@ var _cx = require('./cx');
 var _cx2 = _interopRequireDefault(_cx);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * Copyright Schrodinger, LLC
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
- * This is to be used with the FixedDataTable. It is a header icon
- * that allows you to reorder the corresponding column.
- *
- * @providesModule FixedDataTableColumnReorderHandle
- * @typechecks
- */
 
 var FixedDataTableColumnReorderHandle = (0, _createReactClass2.default)({
   displayName: 'FixedDataTableColumnReorderHandle',
@@ -63,7 +52,12 @@ var FixedDataTableColumnReorderHandle = (0, _createReactClass2.default)({
     /**
      * Column key for the column being reordered.
      */
-    columnKey: _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.number])
+    columnKey: _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.number]),
+
+    /**
+     * Whether the reorder handle should respond to touch events or not.
+     */
+    touchEnabled: _propTypes2.default.bool
   },
 
   getInitialState: function getInitialState() /*object*/{
@@ -90,15 +84,23 @@ var FixedDataTableColumnReorderHandle = (0, _createReactClass2.default)({
         'fixedDataTableCellLayout/columnReorderContainer/active': false
       }),
       onMouseDown: this.onMouseDown,
+      onTouchStart: this.props.touchEnabled ? this.onMouseDown : null,
+      onTouchEnd: this.props.touchEnabled ? function (e) {
+        return e.stopPropagation();
+      } : null,
+      onTouchMove: this.props.touchEnabled ? function (e) {
+        return e.stopPropagation();
+      } : null,
       style: style });
   },
   onMouseDown: function onMouseDown(event) {
     var targetRect = event.target.getBoundingClientRect();
+    var coordinates = _FixedDataTableEventHelper2.default.getCoordinatesFromEvent(event);
 
-    var mouseLocationInElement = event.clientX - targetRect.offsetLeft;
+    var mouseLocationInElement = coordinates.x - targetRect.offsetLeft;
     var mouseLocationInRelationToColumnGroup = mouseLocationInElement + event.target.parentElement.offsetLeft;
 
-    this._mouseMoveTracker = new _DOMMouseMoveTracker2.default(this._onMove, this._onColumnReorderEnd, document.body);
+    this._mouseMoveTracker = new _DOMMouseMoveTracker2.default(this._onMove, this._onColumnReorderEnd, document.body, this.props.touchEnabled);
     this._mouseMoveTracker.captureMouseMoves(event);
     this.setState({
       dragDistance: 0
@@ -115,6 +117,14 @@ var FixedDataTableColumnReorderHandle = (0, _createReactClass2.default)({
     this._distance = 0;
     this._animating = true;
     this.frameId = requestAnimationFrame(this._updateState);
+
+    /**
+     * This prevents the rows from moving around when we drag the
+     * headers on touch devices.
+     */
+    if (this.props.touchEnabled) {
+      event.stopPropagation();
+    }
   },
   _onMove: function _onMove( /*number*/deltaX) {
     this._distance = this.state.dragDistance + deltaX;
@@ -136,6 +146,19 @@ var FixedDataTableColumnReorderHandle = (0, _createReactClass2.default)({
     });
     this.props.onColumnReorderMove(this._distance);
   }
-});
+}); /**
+     * Copyright Schrodinger, LLC
+     * All rights reserved.
+     *
+     * This source code is licensed under the BSD-style license found in the
+     * LICENSE file in the root directory of this source tree. An additional grant
+     * of patent rights can be found in the PATENTS file in the same directory.
+     *
+     * This is to be used with the FixedDataTable. It is a header icon
+     * that allows you to reorder the corresponding column.
+     *
+     * @providesModule FixedDataTableColumnReorderHandle
+     * @typechecks
+     */
 
 module.exports = FixedDataTableColumnReorderHandle;

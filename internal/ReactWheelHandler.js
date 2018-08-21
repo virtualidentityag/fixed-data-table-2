@@ -51,6 +51,7 @@ var ReactWheelHandler = function () {
     this._deltaX = 0;
     this._deltaY = 0;
     this._didWheel = this._didWheel.bind(this);
+    this._rootRef = null;
     if (typeof handleScrollX !== 'function') {
       handleScrollX = handleScrollX ? _emptyFunction2.default.thatReturnsTrue : _emptyFunction2.default.thatReturnsFalse;
     }
@@ -71,6 +72,18 @@ var ReactWheelHandler = function () {
   }
 
   _createClass(ReactWheelHandler, [{
+    key: 'contains',
+    value: function contains(target) {
+      var parent = target;
+      while (parent != document.body) {
+        if (parent === this._rootRef) {
+          return true;
+        }
+        parent = parent.parentNode;
+      }
+      return false;
+    }
+  }, {
     key: 'onWheel',
     value: function onWheel( /*object*/event) {
       var normalizedEvent = (0, _normalizeWheel2.default)(event);
@@ -79,6 +92,10 @@ var ReactWheelHandler = function () {
       var handleScrollX = this._handleScrollX(deltaX, deltaY);
       var handleScrollY = this._handleScrollY(deltaY, deltaX);
       if (!handleScrollX && !handleScrollY) {
+        return;
+      }
+
+      if (this._rootRef && !this.contains(event.target)) {
         return;
       }
 
@@ -97,6 +114,11 @@ var ReactWheelHandler = function () {
       if (changed === true && this._animationFrameID === null) {
         this._animationFrameID = (0, _requestAnimationFramePolyfill2.default)(this._didWheel);
       }
+    }
+  }, {
+    key: 'setRoot',
+    value: function setRoot(rootRef) {
+      this._rootRef = rootRef;
     }
   }, {
     key: '_didWheel',

@@ -112,6 +112,9 @@ var Scrollbar = (0, _createReactClass2.default)({
       zIndex: 99
     };
   },
+  faceRef: function faceRef(ref) {
+    this.face = ref;
+  },
   render: function render() /*?object*/{
     if (!this.state.scrollable) {
       return null;
@@ -183,7 +186,7 @@ var Scrollbar = (0, _createReactClass2.default)({
         style: mainStyle,
         tabIndex: 0 },
       _React2.default.createElement('div', {
-        ref: 'face',
+        ref: this.faceRef,
         className: faceClassName,
         style: faceStyle
       })
@@ -299,7 +302,7 @@ var Scrollbar = (0, _createReactClass2.default)({
   _onMouseDown: function _onMouseDown( /*object*/event) {
     var nextState;
 
-    if (event.target !== _ReactDOM2.default.findDOMNode(this.refs.face)) {
+    if (event.target !== _ReactDOM2.default.findDOMNode(this.face)) {
       // Both `offsetX` and `layerX` are non-standard DOM property but they are
       // magically available for browsers somehow.
       var nativeEvent = event.nativeEvent;
@@ -319,7 +322,7 @@ var Scrollbar = (0, _createReactClass2.default)({
 
     this._mouseMoveTracker.captureMouseMoves(event);
     // Focus the node so it may receive keyboard event.
-    // ReactDOM.findDOMNode(this).focus();
+    _ReactDOM2.default.findDOMNode(this).focus();
   },
   _onMouseMove: function _onMouseMove( /*number*/deltaX, /*number*/deltaY) {
     var props = this.props;
@@ -460,6 +463,6 @@ var Scrollbar = (0, _createReactClass2.default)({
 
 Scrollbar.KEYBOARD_SCROLL_AMOUNT = KEYBOARD_SCROLL_AMOUNT;
 Scrollbar.SIZE = parseInt((0, _cssVar2.default)('scrollbar-size'), 10);
-Scrollbar.OFFSET = FACE_MARGIN / 2 + 1;
+Scrollbar.OFFSET = 1;
 
 module.exports = Scrollbar;

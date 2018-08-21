@@ -36,5 +36,5 @@ var FixedDataTableRoot = {
   Table: _FixedDataTable2.default
 };
 
-FixedDataTableRoot.version = '0.8.0';
+FixedDataTableRoot.version = '0.8.13';
 module.exports = FixedDataTableRoot;

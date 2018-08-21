@@ -28,6 +28,10 @@ var _FixedDataTableCellGroup = require('./FixedDataTableCellGroup');
 
 var _FixedDataTableCellGroup2 = _interopRequireDefault(_FixedDataTableCellGroup);
 
+var _Scrollbar = require('./Scrollbar');
+
+var _Scrollbar2 = _interopRequireDefault(_Scrollbar);
+
 var _cx = require('./cx');
 
 var _cx2 = _interopRequireDefault(_cx);
@@ -48,11 +52,15 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+// .fixedDataTableLayout/header border-bottom-width
+var HEADER_BORDER_BOTTOM_WIDTH = 1;
+
 /**
  * Component that renders the row for <FixedDataTable />.
  * This component should not be used directly by developer. Instead,
  * only <FixedDataTable /> should use the component internally.
  */
+
 var FixedDataTableRowImpl = function (_React$Component) {
   _inherits(FixedDataTableRowImpl, _React$Component);
 
@@ -67,7 +75,7 @@ var FixedDataTableRowImpl = function (_React$Component) {
       args[_key] = arguments[_key];
     }
 
-    return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = FixedDataTableRowImpl.__proto__ || Object.getPrototypeOf(FixedDataTableRowImpl)).call.apply(_ref, [this].concat(args))), _this), _this._getColumnsWidth = function ( /*array*/columns) /*number*/{
+    return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = FixedDataTableRowImpl.__proto__ || Object.getPrototypeOf(FixedDataTableRowImpl)).call.apply(_ref, [this].concat(args))), _this), _this.mouseLeaveIndex = null, _this._getColumnsWidth = function ( /*array*/columns) /*number*/{
       var width = 0;
       for (var i = 0; i < columns.length; ++i) {
         width += columns[i].props.width;
@@ -97,9 +105,17 @@ var FixedDataTableRowImpl = function (_React$Component) {
         'public/fixedDataTableRow/fixedColumnsDivider': left > 0,
         'public/fixedDataTableRow/columnsShadow': _this.props.scrollLeft > 0
       });
+      var dividerHeight = _this.props.cellGroupWrapperHeight ? _this.props.cellGroupWrapperHeight - HEADER_BORDER_BOTTOM_WIDTH : _this.props.height;
       var style = {
         left: left,
-        height: _this.props.height
+        height: dividerHeight
+      };
+      return _React2.default.createElement('div', { className: className, style: style });
+    }, _this._renderFixedRightColumnsShadow = function ( /*number*/left) /*?object*/{
+      var className = (0, _cx2.default)('fixedDataTableRowLayout/columnsShadow', 'fixedDataTableRowLayout/columnsRightShadow', 'fixedDataTableRowLayout/fixedColumnsDivider', 'public/fixedDataTableRow/columnsShadow', 'public/fixedDataTableRow/columnsRightShadow', 'public/fixedDataTableRow/fixedColumnsDivider');
+      var style = {
+        height: _this.props.height,
+        left: left
       };
       return _React2.default.createElement('div', { className: className, style: style });
     }, _this._renderColumnsRightShadow = function ( /*number*/totalWidth) /*?object*/{
@@ -114,14 +130,41 @@ var FixedDataTableRowImpl = function (_React$Component) {
       _this.props.onClick(event, _this.props.index);
     }, _this._onDoubleClick = function ( /*object*/event) {
       _this.props.onDoubleClick(event, _this.props.index);
+    }, _this._onContextMenu = function ( /*object*/event) {
+      _this.props.onContextMenu(event, _this.props.index);
+    }, _this._onMouseUp = function ( /*object*/event) {
+      _this.props.onMouseUp(event, _this.props.index);
     }, _this._onMouseDown = function ( /*object*/event) {
       _this.props.onMouseDown(event, _this.props.index);
     }, _this._onMouseEnter = function ( /*object*/event) {
-      _this.props.onMouseEnter(event, _this.props.index);
+      /**
+       * This is necessary so that onMouseLeave is fired with the initial
+       * row index since this row could be updated with a different index
+       * when scrolling.
+       */
+      _this.mouseLeaveIndex = _this.props.index;
+      if (_this.props.onMouseEnter) {
+        _this.props.onMouseEnter(event, _this.props.index);
+      }
     }, _this._onMouseLeave = function ( /*object*/event) {
-      _this.props.onMouseLeave(event, _this.props.index);
+      if (_this.mouseLeaveIndex === null) {
+        _this.mouseLeaveIndex = _this.props.index;
+      }
+      _this.props.onMouseLeave(event, _this.mouseLeaveIndex);
+      _this.mouseLeaveIndex = null;
+    }, _this._onTouchStart = function ( /*object*/event) {
+      _this.props.onTouchStart(event, _this.props.index);
+    }, _this._onTouchEnd = function ( /*object*/event) {
+      _this.props.onTouchEnd(event, _this.props.index);
+    }, _this._onTouchMove = function ( /*object*/event) {
+      _this.props.onTouchMove(event, _this.props.index);
     }, _temp), _possibleConstructorReturn(_this, _ret);
   }
+
+  /**
+   * The index of a row for which to fire the onMouseLeave event.
+   */
+
 
   _createClass(FixedDataTableRowImpl, [{
     key: 'render',
@@ -143,10 +186,12 @@ var FixedDataTableRowImpl = function (_React$Component) {
         key: 'fixed_cells',
         isScrolling: this.props.isScrolling,
         height: this.props.height,
+        cellGroupWrapperHeight: this.props.cellGroupWrapperHeight,
         left: 0,
         width: fixedColumnsWidth,
         zIndex: 2,
         columns: this.props.fixedColumns,
+        touchEnabled: this.props.touchEnabled,
         onColumnResize: this.props.onColumnResize,
         onColumnReorder: this.props.onColumnReorder,
         onColumnReorderMove: this.props.onColumnReorderMove,
@@ -157,15 +202,40 @@ var FixedDataTableRowImpl = function (_React$Component) {
         rowIndex: this.props.index
       });
       var columnsLeftShadow = this._renderColumnsLeftShadow(fixedColumnsWidth);
+      var fixedRightColumnsWidth = this._getColumnsWidth(this.props.fixedRightColumns);
+      var scrollbarOffset = this.props.showScrollbarY ? _Scrollbar2.default.SIZE : 0;
+      var fixedRightColumns = _React2.default.createElement(_FixedDataTableCellGroup2.default, {
+        key: 'fixed_right_cells',
+        isScrolling: this.props.isScrolling,
+        height: this.props.height,
+        cellGroupWrapperHeight: this.props.cellGroupWrapperHeight,
+        offsetLeft: this.props.width - fixedRightColumnsWidth - scrollbarOffset,
+        width: fixedRightColumnsWidth,
+        zIndex: 2,
+        columns: this.props.fixedRightColumns,
+        touchEnabled: this.props.touchEnabled,
+        onColumnResize: this.props.onColumnResize,
+        onColumnReorder: this.props.onColumnReorder,
+        onColumnReorderMove: this.props.onColumnReorderMove,
+        onColumnReorderEnd: this.props.onColumnReorderEnd,
+        isColumnReordering: this.props.isColumnReordering,
+        columnReorderingData: this.props.columnReorderingData,
+        rowHeight: this.props.height,
+        rowIndex: this.props.index
+      });
+      var fixedRightColumnsShadow = fixedRightColumnsWidth ? this._renderFixedRightColumnsShadow(this.props.width - fixedRightColumnsWidth - scrollbarOffset - 5) : null;
       var scrollableColumns = _React2.default.createElement(_FixedDataTableCellGroup2.default, {
         key: 'scrollable_cells',
         isScrolling: this.props.isScrolling,
         height: this.props.height,
+        cellGroupWrapperHeight: this.props.cellGroupWrapperHeight,
+        align: 'right',
         left: this.props.scrollLeft,
         offsetLeft: fixedColumnsWidth,
-        width: this.props.width - fixedColumnsWidth,
+        width: this.props.width - fixedColumnsWidth - fixedRightColumnsWidth - scrollbarOffset,
         zIndex: 0,
         columns: this.props.scrollableColumns,
+        touchEnabled: this.props.touchEnabled,
         onColumnResize: this.props.onColumnResize,
         onColumnReorder: this.props.onColumnReorder,
         onColumnReorderMove: this.props.onColumnReorderMove,
@@ -184,22 +254,43 @@ var FixedDataTableRowImpl = function (_React$Component) {
         width: this.props.width
       };
 
+      var scrollbarSpacer;
+      if (this.props.showScrollbarY) {
+        var spacerStyles = {
+          width: scrollbarOffset,
+          height: this.props.height,
+          left: this.props.width - scrollbarOffset
+        };
+        scrollbarSpacer = _React2.default.createElement('div', {
+          style: spacerStyles,
+          className: (0, _cx2.default)('public/fixedDataTable/scrollbarSpacer')
+        });
+      }
+
       return _React2.default.createElement(
         'div',
         {
           className: (0, _joinClasses2.default)(className, this.props.className),
           onClick: this.props.onClick ? this._onClick : null,
           onDoubleClick: this.props.onDoubleClick ? this._onDoubleClick : null,
+          onContextMenu: this.props.onContextMenu ? this._onContextMenu : null,
           onMouseDown: this.props.onMouseDown ? this._onMouseDown : null,
-          onMouseEnter: this.props.onMouseEnter ? this._onMouseEnter : null,
+          onMouseUp: this.props.onMouseUp ? this._onMouseUp : null,
+          onMouseEnter: this.props.onMouseEnter || this.props.onMouseLeave ? this._onMouseEnter : null,
           onMouseLeave: this.props.onMouseLeave ? this._onMouseLeave : null,
+          onTouchStart: this.props.onTouchStart ? this._onTouchStart : null,
+          onTouchEnd: this.props.onTouchEnd ? this._onTouchEnd : null,
+          onTouchMove: this.props.onTouchMove ? this._onTouchMove : null,
           style: style },
         _React2.default.createElement(
           'div',
           { className: (0, _cx2.default)('fixedDataTableRowLayout/body') },
           fixedColumns,
           scrollableColumns,
-          columnsLeftShadow
+          columnsLeftShadow,
+          fixedRightColumns,
+          fixedRightColumnsShadow,
+          scrollbarSpacer
         ),
         rowExpanded && _React2.default.createElement(
           'div',
@@ -226,9 +317,19 @@ FixedDataTableRowImpl.propTypes = {
   fixedColumns: _propTypes2.default.array.isRequired,
 
   /**
+   * Array of <FixedDataTableColumn /> for the fixed columns positioned at end of the table.
+   */
+  fixedRightColumns: _propTypes2.default.array.isRequired,
+
+  /**
    * Height of the row.
    */
   height: _propTypes2.default.number.isRequired,
+
+  /**
+   * Height of fixedDataTableCellGroupLayout/cellGroupWrapper.
+   */
+  cellGroupWrapperHeight: _propTypes2.default.number,
 
   /**
    * Height of the content to be displayed below the row.
@@ -272,6 +373,11 @@ FixedDataTableRowImpl.propTypes = {
   onDoubleClick: _propTypes2.default.func,
 
   /**
+   * Fire when a contextual-menu is requested above a row.
+   */
+  onContextMenu: _propTypes2.default.func,
+
+  /**
    * Callback for when resizer knob (in FixedDataTableCell) is clicked
    * to initialize resizing. Please note this is only on the cells
    * in the header.
@@ -305,7 +411,9 @@ FixedDataTableRowImpl.propTypes = {
    * Callback for when the mouse is released to complete reordering.
    * @param number distance
    */
-  onColumnReorderEnd: _propTypes2.default.func
+  onColumnReorderEnd: _propTypes2.default.func,
+
+  touchEnabled: _propTypes2.default.bool
 };
 
 var FixedDataTableRow = function (_React$Component2) {

@@ -109,7 +109,12 @@ var FixedDataTableCell = (0, _createReactClass2.default)({
     /**
      * Flag for enhanced performance check
      */
-    pureRendering: _propTypes2.default.bool
+    pureRendering: _propTypes2.default.bool,
+
+    /**
+     * Whether touch is enabled or not.
+     */
+    touchEnabled: _propTypes2.default.bool
   },
 
   getInitialState: function getInitialState() {
@@ -261,15 +266,24 @@ var FixedDataTableCell = (0, _createReactClass2.default)({
 
     var columnResizerComponent;
     if (props.onColumnResize) {
+      var suppress = function suppress(event) {
+        event.preventDefault();
+        event.stopPropagation();
+      };
+
       var columnResizerStyle = {
         height: height
       };
+      ;
       columnResizerComponent = _React2.default.createElement(
         'div',
         {
           className: (0, _cx2.default)('fixedDataTableCellLayout/columnResizerContainer'),
           style: columnResizerStyle,
-          onMouseDown: this._onColumnResizerMouseDown },
+          onMouseDown: this._onColumnResizerMouseDown,
+          onTouchStart: this.props.touchEnabled ? this._onColumnResizerMouseDown : null,
+          onTouchEnd: this.props.touchEnabled ? suppress : null,
+          onTouchMove: this.props.touchEnabled ? suppress : null },
         _React2.default.createElement('div', {
           className: (0, _joinClasses2.default)((0, _cx2.default)('fixedDataTableCellLayout/columnResizerKnob'), (0, _cx2.default)('public/fixedDataTableCell/columnResizerKnob')),
           style: columnResizerStyle
@@ -282,7 +296,9 @@ var FixedDataTableCell = (0, _createReactClass2.default)({
       //header row
       columnReorderComponent = _React2.default.createElement(_FixedDataTableColumnReorderHandle2.default, _extends({
         columnKey: this.columnKey,
+        touchEnabled: this.props.touchEnabled,
         onMouseDown: this._onColumnReorderMouseDown,
+        onTouchStart: this._onColumnReorderMouseDown,
         height: height
       }, this.props));
     }
@@ -320,6 +336,14 @@ var FixedDataTableCell = (0, _createReactClass2.default)({
   },
   _onColumnResizerMouseDown: function _onColumnResizerMouseDown( /*object*/event) {
     this.props.onColumnResize(this.props.left, this.props.width, this.props.minWidth, this.props.maxWidth, this.props.columnKey, event);
+    /**
+     * This prevents the rows from moving around when we resize the
+     * headers on touch devices.
+     */
+    if (this.props.touchEnabled) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
   },
   _onColumnReorderMouseDown: function _onColumnReorderMouseDown( /*object*/event) {
     this.props.onColumnReorder(this.props.columnKey, this.props.width, this.props.left, event);

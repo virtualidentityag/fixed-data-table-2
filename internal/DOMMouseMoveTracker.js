@@ -33,6 +33,10 @@ var _requestAnimationFramePolyfill = require('./requestAnimationFramePolyfill');
 
 var _requestAnimationFramePolyfill2 = _interopRequireDefault(_requestAnimationFramePolyfill);
 
+var _FixedDataTableEventHelper = require('./FixedDataTableEventHelper');
+
+var _FixedDataTableEventHelper2 = _interopRequireDefault(_FixedDataTableEventHelper);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -45,10 +49,12 @@ var DOMMouseMoveTracker = function () {
   function DOMMouseMoveTracker(
   /*function*/onMove,
   /*function*/onMoveEnd,
-  /*DOMElement*/domNode) {
+  /*DOMElement*/domNode,
+  /*boolean*/touchEnabled) {
     _classCallCheck(this, DOMMouseMoveTracker);
 
     this._isDragging = false;
+    this._isTouchEnabled = touchEnabled;
     this._animationFrameID = null;
     this._domNode = domNode;
     this._onMove = onMove;
@@ -70,39 +76,54 @@ var DOMMouseMoveTracker = function () {
   _createClass(DOMMouseMoveTracker, [{
     key: 'captureMouseMoves',
     value: function captureMouseMoves( /*object*/event) {
-      if (!this._eventMoveToken && !this._eventUpToken && !this._eventLeaveToken && !this._eventOutToken) {
+      if (!this._eventMoveToken && !this._eventUpToken && !this._eventLeaveToken) {
         this._eventMoveToken = _EventListener2.default.listen(this._domNode, 'mousemove', this._onMouseMove);
         this._eventUpToken = _EventListener2.default.listen(this._domNode, 'mouseup', this._onMouseUp);
         this._eventLeaveToken = _EventListener2.default.listen(this._domNode, 'mouseleave', this._onMouseEnd);
-        this._eventOutToken = _EventListener2.default.listen(this._domNode, 'mouseout', this.onMouseEnd);
+      }
+
+      if (this._isTouchEnabled && !this._eventTouchStartToken && !this._eventTouchMoveToken && !this._eventTouchEndToken) {
+        this._eventTouchStartToken = _EventListener2.default.listen(this._domNode, 'touchstart', this._onMouseMove);
+        this._eventTouchMoveToken = _EventListener2.default.listen(this._domNode, 'touchmove', this._onMouseMove);
+        this._eventTouchEndToken = _EventListener2.default.listen(this._domNode, 'touchend', this._onMouseUp);
       }
 
       if (!this._isDragging) {
         this._deltaX = 0;
         this._deltaY = 0;
         this._isDragging = true;
-        this._x = event.clientX;
-        this._y = event.clientY;
+        var coordinates = _FixedDataTableEventHelper2.default.getCoordinatesFromEvent(event);
+        var x = coordinates.x;
+        var y = coordinates.y;
+        this._x = x;
+        this._y = y;
       }
       event.preventDefault();
     }
 
     /**
-     * These releases all of the listeners on document.body.
+     * This releases all of the listeners on document.body.
      */
 
   }, {
     key: 'releaseMouseMoves',
     value: function releaseMouseMoves() {
-      if (this._eventMoveToken && this._eventUpToken && this._eventLeaveToken && this._eventOutToken) {
+      if (this._eventMoveToken && this._eventUpToken && this._eventLeaveToken) {
         this._eventMoveToken.remove();
         this._eventMoveToken = null;
         this._eventUpToken.remove();
         this._eventUpToken = null;
         this._eventLeaveToken.remove();
         this._eventLeaveToken = null;
-        this._eventOutToken.remove();
-        this._eventOutToken = null;
+      }
+
+      if (this._isTouchEnabled && this._eventTouchStartToken && this._eventTouchMoveToken && this._eventTouchEndToken) {
+        this._eventTouchStartToken.remove();
+        this._eventTouchStartToken = null;
+        this._eventTouchMoveToken.remove();
+        this._eventTouchMoveToken = null;
+        this._eventTouchEndToken.remove();
+        this._eventTouchEndToken = null;
       }
 
       if (this._animationFrameID !== null) {
@@ -134,8 +155,9 @@ var DOMMouseMoveTracker = function () {
   }, {
     key: '_onMouseMove',
     value: function _onMouseMove( /*object*/event) {
-      var x = event.clientX;
-      var y = event.clientY;
+      var coordinates = _FixedDataTableEventHelper2.default.getCoordinatesFromEvent(event);
+      var x = coordinates.x;
+      var y = coordinates.y;
 
       this._deltaX += x - this._x;
       this._deltaY += y - this._y;

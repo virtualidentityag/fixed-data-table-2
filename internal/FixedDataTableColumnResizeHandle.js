@@ -104,7 +104,12 @@ var FixedDataTableColumnResizeHandle = (0, _createReactClass2.default)({
     /**
      * Column key for the column being resized.
      */
-    columnKey: _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.number])
+    columnKey: _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.number]),
+
+    /**
+     * Whether the resize handle should respond to touch events or not.
+     */
+    touchEnabled: _propTypes2.default.bool
   },
 
   getInitialState: function getInitialState() /*object*/{
@@ -123,7 +128,7 @@ var FixedDataTableColumnResizeHandle = (0, _createReactClass2.default)({
     }
   },
   componentDidMount: function componentDidMount() {
-    this._mouseMoveTracker = new _DOMMouseMoveTracker2.default(this._onMove, this._onColumnResizeEnd, document.body);
+    this._mouseMoveTracker = new _DOMMouseMoveTracker2.default(this._onMove, this._onColumnResizeEnd, document.body, this.props.touchEnabled);
   },
   componentWillUnmount: function componentWillUnmount() {
     this._mouseMoveTracker.releaseMouseMoves();
